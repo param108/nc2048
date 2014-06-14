@@ -11,6 +11,10 @@
 using namespace std;
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+#define SINGLE_PLAYER_MENU_OPT 0
+#define MULTI_PLAYER_MENU_OPT 1
+#define TEXT_MODE_MENU_OPT 2
+#define EXIT_MENU_OPT 3
 
 class board_display {
 public:
@@ -20,18 +24,17 @@ public:
 	board brd;	
 
 	board_display() {
-		char buf[10];
-		int t;
-		init();
-		maingame();
-		loginscreen(buf);
-		bring_to_top(game_panel);
-		gametype(t);
-		bring_to_top(game_panel);
-		getch();
+	}
+
+	void end() {
+		del_panel(window_map[game_panel]);
+		del_panel(window_map[dlg_screen]);
+		delwin(hiscore_panel);
+		delwin(main_panel);
+		delwin(game_panel);
+		delwin(dlg_screen);
+		delwin(dlg_form);
 		endwin();
-		printf("Name:%s\n",buf);
-		printf("Type:%d\n",t);
 	}
 
 	void init() {
@@ -79,6 +82,7 @@ public:
 		box(dlg_form,0,0);
 	}
 
+
 	void gametype(int &t) {
 		int n_choices = 0;
 		int c = 0;
@@ -86,6 +90,7 @@ public:
 		const char *choices[] = {
      "Single Player",
      "Multi Player",
+		 "Single Player Text Mode",
      "Exit",
    	};
 	
@@ -110,7 +115,7 @@ public:
 		set_menu_sub(my_menu, dlg_menu);
 
 
-		mvwprintw(dlg_form,h-2,2,"<Enter> to exit"); 
+		mvwprintw(dlg_form,h-2,2,"<Enter> to choose"); 
 
 		/* Post the menu */
 		post_menu(my_menu);
@@ -152,6 +157,7 @@ public:
 
 		delete my_items;
 	}
+
 	void loginscreen(char *buf) {
 		FIELD* fld[2];
 		FORM* login;
