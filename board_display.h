@@ -21,8 +21,14 @@ public:
 	WINDOW *dlg_screen, *dlg_form;
 	map<WINDOW*, PANEL*> window_map;
 	board brd;	
+	int hi[4][4];
 
 	board_display() {
+		for (int i =0 ; i< 4; i++) {
+			for (int j = 0; j< 4; j++) {
+				hi[i][j] = 0;
+			}
+		}
 	}
 
 	void reset() {
@@ -46,6 +52,11 @@ public:
 		cbreak();
 		noecho();
 		raw();
+		start_color();			/* Start color 			*/
+		init_pair(1, COLOR_BLACK, COLOR_CYAN);
+		init_pair(2, COLOR_BLACK, COLOR_YELLOW);
+		init_pair(3, COLOR_WHITE, COLOR_BLACK);
+
 	}
 
 	void scale_board(int &h, int &l) {
@@ -120,10 +131,16 @@ public:
 			for (int j = 0; j<4; j++) {
 				char num[5];
 				int val = brd.data[i][j];
-				int y = 2 + i*4 + starty;
-				int x = 2 + j*7 + startx;
+				int sy = 2 + i*4 + starty;
+				int sx = 2 + j*7 + startx;
+				int y = sy;
+				int x = sx;
 				sprintf(num,"%d",val);
 				int k;
+				int color = hi[i][j];
+				if (color == 0) {
+					color = 3;
+				}
 				for (k = 0; k<((4 - strlen(num))/2);k++) {
 					mvwaddch(main_panel,y, x, ' ');
 					x++;
@@ -135,6 +152,12 @@ public:
 					mvwaddch(main_panel,y, x, ' ');
 					k++;
 				}
+				if (has_colors()) {
+					mvwchgat(main_panel,sy,sx,4, A_NORMAL, color, NULL);
+				}
+
+				// Clear all highlights on a render
+				hi[i][j] = 0;
 			}
 		}
 	}
@@ -149,8 +172,13 @@ public:
 
 		render_board();
 
-		mvwaddstr(main_panel,1,1,"Use arrow keys to play");
-		mvwaddstr(main_panel,2,1,"q to quit");
+		mvwaddstr(main_panel,1,1,"Use arrow keys to play, q to quit");
+		if (has_colors()) {
+		  mvwaddstr(main_panel,2,1,"    is a newly added number");
+			mvwchgat(main_panel,2,1,2,A_NORMAL,2, NULL);
+		  mvwaddstr(main_panel,3,1,"    is the result of an addition");
+			mvwchgat(main_panel,3,1,2,A_NORMAL,1, NULL);
+		}
 		dlg_screen = newwin(h/2,w,h/4,0);
     dlg_form = derwin(dlg_screen, h/2-8, w-4, 4, 2);
 
@@ -169,11 +197,11 @@ public:
 		doupdate();
 	}
 
-	void do_highlights(vector<changed> &o) {
+	void do_highlights(vector<changed> &o, int type) {
 		/* highlights */
 		for (int hindex = 0; hindex < o.size(); hindex++) {
 			if (brd.data[o[hindex].i][o[hindex].j] == o[hindex].val) {
-				//highlight(o[hindex].i,o[hindex].j);
+				hi[o[hindex].i][o[hindex].j]=type;
 			}
 		}
 	}
@@ -209,14 +237,21 @@ public:
 			}
 			if (f.is_open()) {
 				brd.print(f);
+				f<<"O:";
+				for (int yu = 0; yu < o.size(); yu++) {
+					f<<"{"<<o[yu].i<<","<<o[yu].j<<","<<o[yu].val<<"}"<<",";
+				}
+				f<<endl;
 			}
 
-			do_highlights(o);
+			do_highlights(o,1);
 
 			o.clear();
 			if (!brd.play_random(o)) {
 				break;
 			}
+
+			do_highlights(o,2);
 
 			render_board();
 			if (f.is_open()) {

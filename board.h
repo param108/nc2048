@@ -13,7 +13,7 @@ class changed {
 	int i;
 	int j;
 	int val;
-	changed(int i, int j, int k):i(i),j(j),val(val) {
+	changed(int i, int j, int k):i(i),j(j),val(k) {
 	}
 };
 
