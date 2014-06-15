@@ -177,6 +177,7 @@ public:
 			}
 		}
 	}
+
 	void singleplayer_cmd_loop(fstream &f) {
 		bring_to_top(game_panel);
 		vector<changed>o;
@@ -203,6 +204,8 @@ public:
 				case KEY_LEFT:
 					brd.move_left(o);
 				break;
+				default:
+					continue;
 			}
 			if (f.is_open()) {
 				brd.print(f);
