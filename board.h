@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <iomanip>
 #include <vector>
+#include <fstream>
 #ifndef _BOARD_H_
 #define _BOARD_H_
 using namespace std;
@@ -26,6 +27,14 @@ class board {
 		RIGHT,
 		LEFT
 	};
+
+	void clear() {
+		for (int i =0; i<4; i++) {
+			for (int j =0; j<4; j++) {
+				data[i][j] = 0;
+			}
+		}
+	}
 
 	board() {
 		for (int i =0; i<4; i++) {
@@ -205,6 +214,16 @@ again:
 			}
 			cout<<endl;
 		}	
+	}
+
+	void print(fstream &f) {
+		for (int i = 0; i< 4; i++) {
+			for (int j = 0; j< 4; j++) {
+				f<<setw(4)<<data[i][j]<<" ";
+			}
+			f<<endl;
+		}	
+		f<<"==="<<endl;
 	}
 
 	bool play_random(vector<changed>&o) {

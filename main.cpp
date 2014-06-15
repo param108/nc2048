@@ -1,7 +1,10 @@
 #include <iostream>
+#include <fstream>
 #include "board.h"
 #include "board_display.h"
 #include <utility>
+
+using namespace std;
 
 extern int play_text();
 
@@ -13,7 +16,9 @@ int main() {
 	bdisp.maingame();
 	bdisp.loginscreen(buf);
 	bdisp.bring_to_top(bdisp.game_panel);
+again:
 	bdisp.gametype(t);
+	bdisp.reset();
 	bdisp.bring_to_top(bdisp.game_panel);
 
 	if (t == EXIT_MENU_OPT) {
@@ -22,12 +27,16 @@ int main() {
 		exit(0);
 	}
 
-	if (t == TEXT_MODE_MENU_OPT) {
-		bdisp.end();
-		play_text();
-		printf("Thanks for playing! %s\n",buf);
+	if (t == SINGLE_PLAYER_MENU_OPT) {
+		fstream f;
+		f.open("/tmp/o.log",ios::out|ios::trunc);
+		bdisp.singleplayer_cmd_loop(f);
+		goto again;
 		exit(0);
 	}
+	
+	bdisp.end();
+	printf("Thanks for playing! %s\n",buf);
 	return 0;
 }
 

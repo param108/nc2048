@@ -9,3 +9,6 @@ This is WIP.
 Uses Ncurses.
 Allows single player and multiplayer versions.
 Use arrow keys.
+
+Done so far:
+1. Single player works

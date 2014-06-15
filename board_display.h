@@ -13,8 +13,7 @@ using namespace std;
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define SINGLE_PLAYER_MENU_OPT 0
 #define MULTI_PLAYER_MENU_OPT 1
-#define TEXT_MODE_MENU_OPT 2
-#define EXIT_MENU_OPT 3
+#define EXIT_MENU_OPT 2
 
 class board_display {
 public:
@@ -24,6 +23,11 @@ public:
 	board brd;	
 
 	board_display() {
+	}
+
+	void reset() {
+		brd.clear();
+		render_board();
 	}
 
 	void end() {
@@ -44,6 +48,97 @@ public:
 		raw();
 	}
 
+	void scale_board(int &h, int &l) {
+		int padx = 1;
+		int pady = 1;
+		int numx = 4;
+		int numy = 1;
+		int vertline = 1;
+		int horline = 1;
+	
+		l = (vertline + padx + numx + padx)*4 + vertline;
+		h = (horline + pady + numy + pady)*4 + horline;
+	}
+
+	void render_board() {
+		int h, w, brdh, brdw;
+  	getmaxyx(main_panel, h, w);
+		scale_board(brdh, brdw);
+		
+		int startx = (w - brdw)/2;
+		int starty = (h - brdh)/2;
+		int iterx, itery;
+
+		for (int i = 0; i < brdw; i++) {
+			for (int j = 0; j < brdh; j++) {
+				iterx = startx + i; 
+				itery = starty + j; 
+				if (i == 0) {
+					if (j == 0) {
+						mvwaddch(main_panel, itery, iterx, ACS_ULCORNER);	
+					} else if (j == (brdh-1)) {
+						mvwaddch(main_panel, itery, iterx, ACS_LLCORNER);	
+					} else if (j%4 == 0) {
+						mvwaddch(main_panel, itery, iterx, ACS_LTEE);
+					} else {
+						mvwaddch(main_panel, itery, iterx, ACS_VLINE);
+					}
+				} else if (i == (brdw-1)) {
+					if (j == 0) {
+						mvwaddch(main_panel, itery, iterx, ACS_URCORNER);	
+					} else if (j == (brdh-1)) {
+						mvwaddch(main_panel, itery, iterx, ACS_LRCORNER);	
+					} else if (j%4 == 0) {
+						mvwaddch(main_panel, itery, iterx, ACS_RTEE);
+					} else {
+						mvwaddch(main_panel, itery, iterx, ACS_VLINE);
+					}
+				} else if (i%7 == 0) {
+					if (j == 0) {
+						mvwaddch(main_panel, itery, iterx, ACS_TTEE);	
+					} else if (j == (brdh-1)) {
+						mvwaddch(main_panel, itery, iterx, ACS_BTEE);	
+					} else if (j%4 == 0) {
+						mvwaddch(main_panel, itery, iterx, ACS_PLUS);
+					} else {
+						mvwaddch(main_panel, itery, iterx, ACS_VLINE);
+					}
+				} else {
+					if (j == 0) {
+						mvwaddch(main_panel, itery, iterx, ACS_HLINE);	
+					} else if (j == (brdh-1)) {
+						mvwaddch(main_panel, itery, iterx, ACS_HLINE);	
+					} else if (j%4 == 0) {
+						mvwaddch(main_panel, itery, iterx, ACS_HLINE);
+					} else {
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i<4; i++) {
+			for (int j = 0; j<4; j++) {
+				char num[5];
+				int val = brd.data[i][j];
+				int y = 2 + i*4 + starty;
+				int x = 2 + j*7 + startx;
+				sprintf(num,"%d",val);
+				int k;
+				for (k = 0; k<((4 - strlen(num))/2);k++) {
+					mvwaddch(main_panel,y, x, ' ');
+					x++;
+				}	
+				mvwaddstr(main_panel, y, x, num);
+				k += strlen(num);	
+				x += strlen(num);	
+				while(k<4) {
+					mvwaddch(main_panel,y, x, ' ');
+					k++;
+				}
+			}
+		}
+	}
+
 	void maingame() {
   	int h, w;
   	getmaxyx(stdscr, h, w);
@@ -52,6 +147,10 @@ public:
 		hiscore_panel = subwin(game_panel,h, 8,0,0);
 		main_panel = subwin(game_panel,h, w-8,0,8);
 
+		render_board();
+
+		mvwaddstr(main_panel,1,1,"Use arrow keys to play");
+		mvwaddstr(main_panel,2,1,"q to quit");
 		dlg_screen = newwin(h/2,w,h/4,0);
     dlg_form = derwin(dlg_screen, h/2-8, w-4, 4, 2);
 
@@ -68,6 +167,68 @@ public:
 
 		update_panels();
 		doupdate();
+	}
+
+	void do_highlights(vector<changed> &o) {
+		/* highlights */
+		for (int hindex = 0; hindex < o.size(); hindex++) {
+			if (brd.data[o[hindex].i][o[hindex].j] == o[hindex].val) {
+				//highlight(o[hindex].i,o[hindex].j);
+			}
+		}
+	}
+	void singleplayer_cmd_loop(fstream &f) {
+		bring_to_top(game_panel);
+		vector<changed>o;
+		int c;
+
+		brd.play_random(o);
+		render_board();
+		wrefresh(main_panel);
+		if (f.is_open()) {
+			brd.print(f);
+		}
+		while((c = wgetch(game_panel)) != 'q')
+		{ switch(c)
+	    {	
+				case KEY_DOWN:
+					brd.move_down(o);
+				break;
+				case KEY_UP:
+					brd.move_up(o);
+				break;
+				case KEY_RIGHT:
+					brd.move_right(o);
+				break;
+				case KEY_LEFT:
+					brd.move_left(o);
+				break;
+			}
+			if (f.is_open()) {
+				brd.print(f);
+			}
+
+			do_highlights(o);
+
+			o.clear();
+			if (!brd.play_random(o)) {
+				break;
+			}
+
+			render_board();
+			if (f.is_open()) {
+				brd.print(f);
+			}
+			o.clear();
+			wrefresh(main_panel);
+
+			if (brd.game_won()) {
+				break;
+			}
+			if (brd.game_lost()) {
+				break;
+			}
+		}	
 	}
 
 	void bring_to_top(WINDOW* w) {
@@ -90,7 +251,6 @@ public:
 		const char *choices[] = {
      "Single Player",
      "Multi Player",
-		 "Single Player Text Mode",
      "Exit",
    	};
 	
