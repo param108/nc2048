@@ -35,6 +35,12 @@ again:
 		exit(0);
 	}
 	
+	if (t == MULTI_PLAYER_MENU_OPT) {
+		bdisp.end();
+		printf("Sorry! Multiplayer mode not yet supported.\n");
+		exit(1);
+	}
+
 	bdisp.end();
 	printf("Thanks for playing! %s\n",buf);
 	return 0;
