@@ -153,7 +153,7 @@ public:
 					k++;
 				}
 				if (has_colors()) {
-					mvwchgat(main_panel,sy,sx,4, A_NORMAL, color, NULL);
+					mvwchgat(main_panel,sy,sx,4, A_BOLD, color, NULL);
 				}
 
 				// Clear all highlights on a render
@@ -175,9 +175,9 @@ public:
 		mvwaddstr(main_panel,1,1,"Use arrow keys to play, q to quit");
 		if (has_colors()) {
 		  mvwaddstr(main_panel,2,1,"    is a newly added number");
-			mvwchgat(main_panel,2,1,2,A_NORMAL,2, NULL);
+			mvwchgat(main_panel,2,1,2,A_BOLD,2, NULL);
 		  mvwaddstr(main_panel,3,1,"    is the result of an addition");
-			mvwchgat(main_panel,3,1,2,A_NORMAL,1, NULL);
+			mvwchgat(main_panel,3,1,2,A_BOLD,1, NULL);
 		}
 		dlg_screen = newwin(h/2,w,h/4,0);
     dlg_form = derwin(dlg_screen, h/2-8, w-4, 4, 2);
