@@ -5,6 +5,8 @@
 #include <string.h>
 #include <list>
 #include <map>
+#include <signal.h>
+#include <unistd.h>
 #include "board.h"
 #ifndef __BOARD_DISPLAY_H__
 #define __BOARD_DISPLAY_H__
@@ -14,14 +16,58 @@ using namespace std;
 #define SINGLE_PLAYER_MENU_OPT 0
 #define MULTI_PLAYER_MENU_OPT 1
 #define EXIT_MENU_OPT 2
-
+class board_display;
+static void alrm_handler(int sig);
+static board_display *The_Board_Display;
 class board_display {
 public:
 	WINDOW *hiscore_panel, *main_panel, *game_panel;
 	WINDOW *dlg_screen, *dlg_form;
 	map<WINDOW*, PANEL*> window_map;
 	board brd;	
+	bool timer_started;
+	int timer_value;
+	int timery;
 	int hi[4][4];
+
+	void update_time(int sig) {
+		if (timer_started) {
+			char d[30];
+			alarm(1);
+			timer_value++;
+			int min = timer_value/60;	
+			int sec = (timer_value%60);
+
+			int w, h;	
+			getmaxyx(main_panel,h,w);
+
+			int brdh,brdw;
+			scale_board(brdh,brdw);
+			//cleanup
+		
+			sprintf(d,"Time so far: %02d:%02d",min, sec);
+			mvwaddstr(main_panel,	timery, (w-strlen(d))/2, d);
+			mvwchgat(main_panel, timery, (w - strlen(d))/2, strlen(d), A_BLINK, 3, NULL);
+			wrefresh(main_panel);
+		}	
+	}
+
+	void start_timer() {
+		timer_started = true;
+		timer_value = 0;
+	
+		int w, h;	
+		getmaxyx(hiscore_panel,w,h);
+
+		update_time(0);
+	}
+
+	void stop_timer() {
+		int w, h;	
+		getmaxyx(main_panel,w,h);
+		mvwchgat(main_panel, timery, 1, w-2, A_BLINK, 3, NULL);
+		timer_started = false;
+	}
 
 	board_display() {
 		for (int i =0 ; i< 4; i++) {
@@ -29,6 +75,8 @@ public:
 				hi[i][j] = 0;
 			}
 		}
+		The_Board_Display = this;
+		signal(SIGALRM,alrm_handler);
 	}
 
 	void reset() {
@@ -80,6 +128,7 @@ public:
 		int starty = (h - brdh)/2;
 		int iterx, itery;
 
+		timery = starty - 2;
 		for (int i = 0; i < brdw; i++) {
 			for (int j = 0; j < brdh; j++) {
 				iterx = startx + i; 
@@ -217,6 +266,9 @@ public:
 		if (f.is_open()) {
 			brd.print(f);
 		}
+
+		start_timer();
+
 		while((c = wgetch(game_panel)) != 'q')
 		{ switch(c)
 	    {	
@@ -267,6 +319,7 @@ public:
 				break;
 			}
 		}	
+		stop_timer();
 	}
 
 	void bring_to_top(WINDOW* w) {
@@ -416,4 +469,11 @@ public:
 	}
 
 };
+
+
+static void alrm_handler(int sig) {
+	The_Board_Display->update_time(sig);
+}
+
+
 #endif
