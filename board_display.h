@@ -28,7 +28,24 @@ public:
 	bool timer_started;
 	int timer_value;
 	int timery;
+	int bannery;
 	int hi[4][4];
+
+	void clear_banner() {
+		int w, h;	
+		getmaxyx(main_panel,h,w);
+
+		for (int i = 1; i< w - 1; i++) {
+			mvwaddch(main_panel, bannery, i, ' ');
+		}		
+	}
+
+	void show_banner(const char *message) {
+			int w, h;	
+			getmaxyx(main_panel,h,w);
+			mvwaddstr(main_panel,	bannery, (w-strlen(message))/2, message);
+			wrefresh(main_panel);
+	}
 
 	void update_time(int sig) {
 		if (timer_started) {
@@ -128,6 +145,7 @@ public:
 		int starty = (h - brdh)/2;
 		int iterx, itery;
 
+		bannery = starty - 3;
 		timery = starty - 2;
 		for (int i = 0; i < brdw; i++) {
 			for (int j = 0; j < brdh; j++) {
@@ -256,6 +274,7 @@ public:
 	}
 
 	void singleplayer_cmd_loop(fstream &f) {
+		clear_banner();
 		bring_to_top(game_panel);
 		vector<changed>o;
 		int c;
@@ -300,6 +319,7 @@ public:
 
 			o.clear();
 			if (!brd.play_random(o)) {
+				show_banner("You Lost! Press q to continue");
 				break;
 			}
 
@@ -313,13 +333,18 @@ public:
 			wrefresh(main_panel);
 
 			if (brd.game_won()) {
+				show_banner("You Won! Press q to continue");
 				break;
 			}
 			if (brd.game_lost()) {
+				show_banner("You Lost! Press q to continue");
 				break;
 			}
 		}	
 		stop_timer();
+		while(c !='q' && ((c = wgetch(game_panel)) != 'q')) {
+			;
+		}
 	}
 
 	void bring_to_top(WINDOW* w) {
