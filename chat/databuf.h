@@ -185,8 +185,12 @@ class grp_ctrl
 	}
 
 	grp_ctx delete_group(grp_ctx hdl) {
-		map<grp_ctx, shared_ptr<grp_data> >::iterator iter = grps.begin();
-		grps.erase(iter);
+		map<grp_ctx, shared_ptr<grp_data> >::iterator iter = grps.find(hdl);
+		if (iter != grps.end()) {
+			grps.erase(iter);
+			return hdl;
+		}
+		return (grp_ctx)NULL;
 	}
 
 };
